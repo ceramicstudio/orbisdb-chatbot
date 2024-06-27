@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useWalletClient } from "wagmi";
 import useStore from "@/zustand/store";
@@ -25,6 +25,7 @@ export function Navbar() {
         setLoggedIn(true);
       }
     }
+
     if (address && walletClient && !loggedIn) {
       setAuth(walletClient)
         .then((auth) => {

@@ -32,7 +32,7 @@ const StartOrbisAuth = async (
 ): Promise<OrbisConnectResult | undefined> => {
   if (walletClient) {
     const auth = new OrbisEVMAuth(window.ethereum!);
-    // Authenticate, but don't persist the session in localStorage
+    // Authenticate - this option persists the session in local storage
     const authResult: OrbisConnectResult = await orbis.connectUser({
       auth,
     });
