@@ -1,6 +1,6 @@
 # OrbisDB Chat Bot
 
-Realtime chat using GraphQL Live Queries, Next.js, and OrbisDB.
+Realtime chat using OpenAI, Next.js, and OrbisDB.
 
 ## Getting Started
 
