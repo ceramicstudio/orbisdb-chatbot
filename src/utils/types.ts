@@ -6,12 +6,6 @@ export type ResolvedAttestation = {
   currAccount: string;
 }
 
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
-}
-
 export type Profile = {
   name?: string
   username?: string

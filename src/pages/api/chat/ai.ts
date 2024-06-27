@@ -2,8 +2,10 @@ import type { NextRequest } from "next/server";
 import { Configuration, OpenAIApi } from "openai-edge";
 import { OpenAIStream, StreamingTextResponse } from "ai";
 
+const apiKey = process.env.OPENAI_API_KEY ?? "";
+
 const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey,
 });
 const openai = new OpenAIApi(configuration);
 
@@ -14,9 +16,13 @@ type NextProps = NextRequest & {
 };
 
 const handler = async (req: NextProps) => {
-  const res = await req.json();
+  const res = (await req.json()) as {
+    message: string;
+    context?: string;
+    messages: Array<{ role: string; content: string }>;
+  };
   console.log(res.message);
-  let context = res.context || "You are a helpful assistant.";
+  const context = res.context ?? "You are a helpful assistant.";
 
   try {
     const response = await openai.createChatCompletion({
@@ -32,13 +38,13 @@ const handler = async (req: NextProps) => {
       top_p: 1,
       frequency_penalty: 1,
       presence_penalty: 1,
-    });
+    }) as Response;
 
     const stream = OpenAIStream(response);
 
     // Respond with the stream
     return new StreamingTextResponse(stream);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
 
     return new Response(JSON.stringify(error), {

@@ -1,7 +1,13 @@
 import { create } from "zustand";
 import { type GetWalletClientResult } from "@wagmi/core";
-import { OrbisDB, OrbisConnectResult } from "@useorbis/db-sdk";
+import { type IEVMProvider, OrbisDB, type OrbisConnectResult } from "@useorbis/db-sdk";
 import { OrbisEVMAuth } from "@useorbis/db-sdk/auth";
+
+declare global {
+  interface Window {
+    ethereum?: IEVMProvider;
+  }
+}
 
 type Store = {
   orbis: OrbisDB;
@@ -18,7 +24,7 @@ const StartOrbisAuth = async (
   orbis: OrbisDB
 ): Promise<OrbisConnectResult | undefined> => {
   if (walletClient) {
-    const auth = new OrbisEVMAuth(window.ethereum);
+    const auth = new OrbisEVMAuth(window.ethereum!);
     // Authenticate, but don't persist the session in localStorage
     const authResult: OrbisConnectResult = await orbis.connectUser({
       auth,

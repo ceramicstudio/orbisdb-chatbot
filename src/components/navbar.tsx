@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAccount } from "wagmi";
 import { useWalletClient } from "wagmi";
 import useStore from "@/zustand/store";
+import { type OrbisConnectResult, type SiwxAttestation } from "@useorbis/db-sdk";
 
 export function Navbar() {
   const [loggedIn, setLoggedIn] = useState<boolean | string>("loading");
@@ -11,25 +12,30 @@ export function Navbar() {
 
   useEffect(() => {
     if (localStorage.getItem("orbis:session")) {
-      const expTime = JSON.parse(localStorage.getItem("orbis:session") || "{}")
-        .session.authAttestation.siwx.message.expirationTime;
+      const attestation = (JSON.parse(localStorage.getItem("orbis:session") ?? "{}") as OrbisConnectResult).session.authAttestation as SiwxAttestation;
+      const expTime = attestation.siwx.message.expirationTime;
+      //@ts-expect-error - TS doesn't know about the expirationTime field
       if (expTime > Date.now()) {
         localStorage.removeItem("orbis:session");
         setLoggedIn(false);
       } else {
         setOrbisSession(
-          JSON.parse(localStorage.getItem("orbis:session") || "{}")
+          JSON.parse(localStorage.getItem("orbis:session") ?? "{}") as OrbisConnectResult
         );
         setLoggedIn(true);
       }
     }
     if (address && walletClient && !loggedIn) {
-      setAuth(walletClient).then((auth) => {
-        if (auth) {
-          console.log("Orbis Auth'd:", auth.session);
-          setLoggedIn(true);
-        }
-      });
+      setAuth(walletClient)
+        .then((auth) => {
+          if (auth) {
+            console.log("Orbis Auth'd:", auth.session);
+            setLoggedIn(true);
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+        });
     }
     return () => {
       setLoggedIn(false);

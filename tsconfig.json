@@ -40,6 +40,7 @@
   "include": [
     ".eslintrc.cjs",
     "next-env.d.ts",
+    "types/openai-edge.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "**/*.cjs",

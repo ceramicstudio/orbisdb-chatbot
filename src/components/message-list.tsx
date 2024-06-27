@@ -3,6 +3,11 @@ import useStore from "@/zustand/store";
 import { PostProps, Profile } from "@/utils/types";
 import { Message } from "@/components/message";
 import { useAccount } from "wagmi";
+import { env } from "@/env";
+
+const POST_ID = env.NEXT_PUBLIC_POST_ID ?? "";
+const PROFILE_ID = env.NEXT_PUBLIC_PROFILE_ID ?? "";
+const CONTEXT_ID = env.NEXT_PUBLIC_CONTEXT_ID ?? "";
 
 export const MessageList = () => {
   const [posts, setPosts] = useState<PostProps[] | []>([]);
@@ -14,18 +19,16 @@ export const MessageList = () => {
   const [robotProfile, setRobotProfile] = useState<Profile | undefined>();
   const messageRef = useRef<HTMLDivElement>(null);
   const { address } = useAccount();
-  const { orbis, orbisSession, setOrbisSession } = useStore();
+  const { orbis, orbisSession } = useStore();
 
   const getProfile = async () => {
     const user = await orbis.getConnectedUser();
     console.log(user);
-    const profile = await orbis
+    const profile = orbis
       .select("controller", "name", "username", "emoji", "actor")
-      .from("kjzl6hvfrbw6c902s0ymqy0l9ljilieukhv34udk8kuzmf6wliv2k6zzhwg7ykz")
+      .from(PROFILE_ID)
       .where({ actor: ["human"] })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      );
+      .context(CONTEXT_ID);
     const profileResult = await profile.run();
     if (profileResult.rows.length) {
       console.log(profileResult.rows[0]);
@@ -37,13 +40,11 @@ export const MessageList = () => {
   };
 
   const getRobotProfile = async (uProfile: Profile) => {
-    const profile = await orbis
+    const profile = orbis
       .select("controller", "name", "username", "emoji", "actor")
-      .from("kjzl6hvfrbw6c902s0ymqy0l9ljilieukhv34udk8kuzmf6wliv2k6zzhwg7ykz")
+      .from(PROFILE_ID)
       .where({ actor: ["robot"] })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      );
+      .context(CONTEXT_ID);
     const profileResult = await profile.run();
     console.log(profileResult);
     if (profileResult.rows.length) {
@@ -62,23 +63,21 @@ export const MessageList = () => {
     rProfile: Profile
   ) => {
     await orbis.getConnectedUser();
-    const messages = await orbis
+    const messages = orbis
       .select("tag", "body", "created", "edited")
-      .from("kjzl6hvfrbw6c8xxo27q5l8of72o7snzbdvlad3jj06h0epfeypg3e10aya5dby")
+      .from(POST_ID)
       // .where({ controller: [authorId, robotDID] })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      );
+      .context(CONTEXT_ID);
     const messageResult = await messages.run();
     console.log(messageResult);
     console.log(messageResult.rows, "81");
     if (messageResult.rows.length && uProfile) {
       const newPosts = messageResult.rows.map((edge) => ({
         // id: edge.node.id,
-        body: edge.body,
+        body: edge.body as string,
         profile: edge.tag === "user" ? uProfile : rProfile,
-        tag: edge.tag,
-        created: edge.created,
+        tag: edge.tag as string,
+        created: edge.created as string,
       })) as PostProps[];
       setPosts(newPosts);
       return messageResult.rows;
@@ -88,26 +87,24 @@ export const MessageList = () => {
   const createPost = async (thisPost: string) => {
     await orbis.getConnectedUser();
     const query = await orbis
-      .insert("kjzl6hvfrbw6c8xxo27q5l8of72o7snzbdvlad3jj06h0epfeypg3e10aya5dby")
+      .insert(POST_ID)
       .value({
         body: thisPost,
         created: new Date().toISOString(),
         tag: "user",
         edited: new Date().toISOString(),
       })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      )
+      .context(CONTEXT_ID)
       .run();
     console.log(query);
 
     if (query.content && profile) {
       const createdPost: PostProps = {
         id: query.id,
-        body: query.content.body,
+        body: query.content.body as string,
         profile,
-        tag: query.content.tag,
-        created: query.content.created,
+        tag: query.content.tag as string,
+        created: query.content.created as string,
         authorId: query.controller,
       };
       return createdPost;
@@ -162,28 +159,24 @@ export const MessageList = () => {
         if (done) {
           await orbis.getConnectedUser();
           const query = await orbis
-            .insert(
-              "kjzl6hvfrbw6c8xxo27q5l8of72o7snzbdvlad3jj06h0epfeypg3e10aya5dby"
-            )
+            .insert(POST_ID)
             .value({
               body: str,
               created: new Date().toISOString(),
               tag: "bot",
               edited: new Date().toISOString(),
             })
-            .context(
-              "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-            )
+            .context(CONTEXT_ID)
             .run();
           console.log(query);
 
           if (query.content && robotProfile) {
             const createdPost: PostProps = {
               id: query.id,
-              body: query.content.body,
+              body: query.content.body as string,
               profile: robotProfile,
-              tag: query.content.tag,
-              created: query.content.created,
+              tag: query.content.tag as string,
+              created: query.content.created as string,
               authorId: query.controller,
             };
             console.log(posts);
@@ -203,7 +196,7 @@ export const MessageList = () => {
 
   useEffect(() => {
     if (orbisSession && address) {
-      getProfile();
+      void getProfile();
     }
   }, [orbisSession, address]);
 

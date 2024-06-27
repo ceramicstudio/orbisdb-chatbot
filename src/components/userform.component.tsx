@@ -3,6 +3,10 @@ import useStore from "@/zustand/store";
 import { Profile } from "@/utils/types";
 import styles from "@/styles/profile.module.scss";
 import { useAccount } from "wagmi";
+import { env } from "@/env";
+
+const PROFILE_ID = env.NEXT_PUBLIC_PROFILE_ID ?? "";
+const CONTEXT_ID = env.NEXT_PUBLIC_CONTEXT_ID ?? "";
 
 export const Userform = () => {
   const { address } = useAccount();
@@ -12,18 +16,15 @@ export const Userform = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [robotLoading, setRobotLoading] = useState<boolean>(false);
 
-
   const getProfile = async () => {
     setLoading(true);
     const user = await orbis.getConnectedUser();
     console.log(user);
-    const profile = await orbis
+    const profile = orbis
       .select("controller", "name", "username", "emoji", "actor")
-      .from("kjzl6hvfrbw6c902s0ymqy0l9ljilieukhv34udk8kuzmf6wliv2k6zzhwg7ykz")
+      .from(PROFILE_ID)
       .where({ actor: ["human"] })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      );
+      .context(CONTEXT_ID);
     const profileResult = await profile.run();
     if (profileResult.rows.length) {
       console.log(profileResult.rows[0]);
@@ -34,13 +35,11 @@ export const Userform = () => {
 
   const getRobotProfile = async () => {
     setLoading(true);
-    const profile = await orbis
+    const profile = orbis
       .select("controller", "name", "username", "emoji", "actor")
-      .from("kjzl6hvfrbw6c902s0ymqy0l9ljilieukhv34udk8kuzmf6wliv2k6zzhwg7ykz")
+      .from(PROFILE_ID)
       .where({ actor: ["robot"] })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      );
+      .context(CONTEXT_ID);
     const profileResult = await profile.run();
     console.log(profileResult);
     if (profileResult.rows.length) {
@@ -53,16 +52,14 @@ export const Userform = () => {
     setLoading(true);
     console.log(orbis);
     const updatequery = await orbis
-      .insert("kjzl6hvfrbw6c902s0ymqy0l9ljilieukhv34udk8kuzmf6wliv2k6zzhwg7ykz")
+      .insert(PROFILE_ID)
       .value({
         name: profile?.name,
         username: profile?.username,
         emoji: profile?.emoji,
         actor: "human",
       })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      )
+      .context(CONTEXT_ID)
       .run();
 
     if (updatequery.content) {
@@ -77,16 +74,14 @@ export const Userform = () => {
     setRobotLoading(true);
     await orbis.getConnectedUser();
     const updatequery = await orbis
-      .insert("kjzl6hvfrbw6c902s0ymqy0l9ljilieukhv34udk8kuzmf6wliv2k6zzhwg7ykz")
+      .insert(PROFILE_ID)
       .value({
         name: robotProfile?.name,
         username: robotProfile?.username,
         emoji: robotProfile?.emoji,
         actor: "robot",
       })
-      .context(
-        "kjzl6kcym7w8y6yd92n1r55cxxih1johqmygctk2nh8w9jtjtysu31po93115q8"
-      )
+      .context(CONTEXT_ID)
       .run();
 
     console.log(updatequery);
@@ -100,8 +95,8 @@ export const Userform = () => {
 
   useEffect(() => {
     if (orbisSession && address) {
-      getProfile();
-      getRobotProfile();
+      void getProfile();
+      void getRobotProfile();
     }
   }, [orbisSession, address]);
 
@@ -114,7 +109,7 @@ export const Userform = () => {
             <input
               className=""
               type="text"
-              defaultValue={profile?.name || ""}
+              defaultValue={profile?.name ?? ""}
               onChange={(e) => {
                 setProfile({ ...profile, name: e.target.value });
               }}
@@ -124,7 +119,7 @@ export const Userform = () => {
             <label>Username</label>
             <input
               type="text"
-              defaultValue={profile?.username || ""}
+              defaultValue={profile?.username ?? ""}
               onChange={(e) => {
                 setProfile({ ...profile, username: e.target.value });
               }}
@@ -134,7 +129,7 @@ export const Userform = () => {
             <label>Emoji</label>
             <input
               type="text"
-              defaultValue={profile?.emoji || ""}
+              defaultValue={profile?.emoji ?? ""}
               onChange={(e) => {
                 setProfile({ ...profile, emoji: e.target.value });
               }}
@@ -151,7 +146,7 @@ export const Userform = () => {
                 margin: "10% 0",
               }}
               onClick={() => {
-                updateProfile();
+                void updateProfile();
               }}
             >
               {loading ? "Loading..." : "Update Profile"}
@@ -166,7 +161,7 @@ export const Userform = () => {
             <input
               className=""
               type="text"
-              defaultValue={robotProfile?.name || ""}
+              defaultValue={robotProfile?.name ?? ""}
               onChange={(e) => {
                 setRobotProfile({ ...robotProfile, name: e.target.value });
               }}
@@ -176,7 +171,7 @@ export const Userform = () => {
             <label>Username</label>
             <input
               type="text"
-              defaultValue={robotProfile?.username || ""}
+              defaultValue={robotProfile?.username ?? ""}
               onChange={(e) => {
                 setRobotProfile({
                   ...robotProfile,
@@ -189,7 +184,7 @@ export const Userform = () => {
             <label>Emoji</label>
             <input
               type="text"
-              defaultValue={robotProfile?.emoji || ""}
+              defaultValue={robotProfile?.emoji ?? ""}
               onChange={(e) => {
                 setRobotProfile({ ...robotProfile, emoji: e.target.value });
               }}
@@ -206,7 +201,7 @@ export const Userform = () => {
                 margin: "10% 0",
               }}
               onClick={() => {
-                updateRobotProfile();
+                void updateRobotProfile();
               }}
             >
               {robotLoading ? "Loading..." : "Update ChatBot Profile"}
