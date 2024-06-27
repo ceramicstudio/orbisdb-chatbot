@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { type GetWalletClientResult } from "@wagmi/core";
-import { type IEVMProvider, OrbisDB, type OrbisConnectResult } from "@useorbis/db-sdk";
+import {
+  type IEVMProvider,
+  OrbisDB,
+  type OrbisConnectResult,
+} from "@useorbis/db-sdk";
 import { OrbisEVMAuth } from "@useorbis/db-sdk/auth";
+import { env } from "@/env";
+
+const ENV_ID = env.NEXT_PUBLIC_ENV_ID ?? "";
 
 declare global {
   interface Window {
@@ -46,7 +53,7 @@ const useStore = create<Store>((set) => ({
     nodes: [
       {
         gateway: "https://studio.useorbis.com",
-        env: "did:pkh:eip155:1:0x514e3b94f0287caf77009039b72c321ef5f016e6",
+        env: ENV_ID,
       },
     ],
   }),

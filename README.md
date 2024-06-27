@@ -24,6 +24,14 @@ Include in your .env file:
 
 `OPENAI_API_KEY="sk-thisisabunchofL3ttersandNum8ers"`
 
+5. Visit the [Orbis Studio](https://studio.useorbis.com/) and create a free account if you do not already have one. 
+
+First, set up a new context (required to use a shared instance). Assign this to `NEXT_PUBLIC_CONTEXT_ID` in your .env file.
+
+Next, navigate to the [model builder](https://studio.useorbis.com/models) view and use the [table reference](models/tables.sql) to define your tables. Use the corresponding model IDs to assign to `NEXT_PUBLIC_POST_ID` and `NEXT_PUBLIC_PROFILE_ID` in your .env file.
+
+Finally, click the "Contexts" tab in the studio navbar and copy your environment ID from the left-hand side of the screen. Assign the value to `NEXT_PUBLIC_ENV_ID` in your .env file.
+
 5. Run the application:
 
 #### Development
