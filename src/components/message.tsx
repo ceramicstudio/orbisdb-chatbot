@@ -1,5 +1,5 @@
 import { formatRelative, formatDistance, differenceInHours } from "date-fns";
-import { PostProps } from "@/utils/types";
+import { type PostProps } from "@/utils/types";
 
 export const Message = ({
   profile,

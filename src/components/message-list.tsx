@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import useStore from "@/zustand/store";
-import { PostProps, Profile } from "@/utils/types";
+import { type PostProps, type Profile } from "@/utils/types";
 import { Message } from "@/components/message";
 import { useAccount } from "wagmi";
 import { env } from "@/env";
@@ -21,37 +21,50 @@ export const MessageList = () => {
   const { address } = useAccount();
   const { orbis, orbisSession } = useStore();
 
-  const getProfile = async () => {
-    const user = await orbis.getConnectedUser();
-    console.log(user);
-    const profile = orbis
-      .select("controller", "name", "username", "emoji", "actor")
-      .from(PROFILE_ID)
-      .where({ actor: ["human"] })
-      .context(CONTEXT_ID);
-    const profileResult = await profile.run();
-    if (profileResult.rows.length) {
-      console.log(profileResult.rows[0]);
-      setProfile(profileResult.rows[0] as Profile);
-    } else {
-      window.location.href = "/profile";
+  const getProfile = async (): Promise<void> => {
+    try {
+      const user = await orbis.getConnectedUser();
+      console.log(user);
+      const profile = orbis
+        .select("controller", "name", "username", "emoji", "actor")
+        .from(PROFILE_ID)
+        .where({ actor: ["human"] })
+        .context(CONTEXT_ID);
+      const profileResult = await profile.run();
+      if (profileResult.rows.length) {
+        console.log(profileResult.rows[0]);
+        setProfile(profileResult.rows[0] as Profile);
+      } else {
+        window.location.href = "/profile";
+      }
+      await getRobotProfile(profileResult.rows[0] as Profile);
+    } catch (error) {
+      console.error(error);
+      return undefined;
     }
-    await getRobotProfile(profileResult.rows[0] as Profile);
   };
 
-  const getRobotProfile = async (uProfile: Profile) => {
-    const profile = orbis
-      .select("controller", "name", "username", "emoji", "actor")
-      .from(PROFILE_ID)
-      .where({ actor: ["robot"] })
-      .context(CONTEXT_ID);
-    const profileResult = await profile.run();
-    console.log(profileResult);
-    if (profileResult.rows.length) {
-      setRobotProfile(profileResult.rows[0] as Profile);
-      await getRecentMessagesQuery(uProfile, profileResult.rows[0] as Profile);
-    } else {
-      window.location.href = "/profile";
+  const getRobotProfile = async (uProfile: Profile): Promise<void> => {
+    try {
+      const profile = orbis
+        .select("controller", "name", "username", "emoji", "actor")
+        .from(PROFILE_ID)
+        .where({ actor: ["robot"] })
+        .context(CONTEXT_ID);
+      const profileResult = await profile.run();
+      console.log(profileResult);
+      if (profileResult.rows.length) {
+        setRobotProfile(profileResult.rows[0] as Profile);
+        await getRecentMessagesQuery(
+          uProfile,
+          profileResult.rows[0] as Profile
+        );
+      } else {
+        window.location.href = "/profile";
+      }
+    } catch (error) {
+      console.error(error);
+      return undefined;
     }
   };
 
@@ -61,60 +74,76 @@ export const MessageList = () => {
   const getRecentMessagesQuery = async (
     uProfile: Profile,
     rProfile: Profile
-  ) => {
-    await orbis.getConnectedUser();
-    const messages = orbis
-      .select("tag", "body", "created", "edited")
-      .from(POST_ID)
-      // .where({ controller: [authorId, robotDID] })
-      .context(CONTEXT_ID);
-    const messageResult = await messages.run();
-    console.log(messageResult);
-    console.log(messageResult.rows, "81");
-    if (messageResult.rows.length && uProfile) {
-      const newPosts = messageResult.rows.map((edge) => ({
-        // id: edge.node.id,
-        body: edge.body as string,
-        profile: edge.tag === "user" ? uProfile : rProfile,
-        tag: edge.tag as string,
-        created: edge.created as string,
-      })) as PostProps[];
-      setPosts(newPosts);
-      return messageResult.rows;
+  ): Promise<PostProps[] | undefined> => {
+    try {
+      await orbis.getConnectedUser();
+      const messages = orbis
+        .select("tag", "body", "created", "edited")
+        .from(POST_ID)
+        // .where({ controller: [authorId, robotDID] })
+        .context(CONTEXT_ID);
+      const messageResult = await messages.run();
+      console.log(messageResult);
+      console.log(messageResult.rows, "81");
+      if (messageResult.rows.length && uProfile) {
+        const newPosts = messageResult.rows.map((edge) => ({
+          // id: edge.node.id,
+          body: edge.body as string,
+          profile: edge.tag === "user" ? uProfile : rProfile,
+          tag: edge.tag as string,
+          created: edge.created as string,
+        })) as PostProps[];
+        setPosts(newPosts);
+        return newPosts;
+      }
+      return [] as PostProps[];
+    } catch (error) {
+      console.error(error);
+      return undefined;
     }
   };
 
-  const createPost = async (thisPost: string) => {
-    await orbis.getConnectedUser();
-    const query = await orbis
-      .insert(POST_ID)
-      .value({
-        body: thisPost,
-        created: new Date().toISOString(),
-        tag: "user",
-        edited: new Date().toISOString(),
-      })
-      .context(CONTEXT_ID)
-      .run();
-    console.log(query);
+  const createPost = async (
+    thisPost: string
+  ): Promise<PostProps | undefined> => {
+    try {
+      await orbis.getConnectedUser();
+      const query = await orbis
+        .insert(POST_ID)
+        .value({
+          body: thisPost,
+          created: new Date().toISOString(),
+          tag: "user",
+          edited: new Date().toISOString(),
+        })
+        .context(CONTEXT_ID)
+        .run();
+      console.log(query);
 
-    if (query.content && profile) {
-      const createdPost: PostProps = {
-        id: query.id,
-        body: query.content.body as string,
-        profile,
-        tag: query.content.tag as string,
-        created: query.content.created as string,
-        authorId: query.controller,
-      };
-      return createdPost;
+      if (query.content && profile) {
+        const createdPost: PostProps = {
+          id: query.id,
+          body: query.content.body as string,
+          profile,
+          tag: query.content.tag as string,
+          created: query.content.created as string,
+          authorId: query.controller,
+        };
+        return createdPost;
+      }
+    } catch (error) {
+      console.error(error);
+      return undefined;
     }
   };
 
   /* a response is triggered each time we sent a message
   which then hits our api found in /pages/api/ai, and stream the response
   back to the frontend */
-  const triggerResponse = async (message: string, inputPost: PostProps) => {
+  const triggerResponse = async (
+    message: string,
+    inputPost: PostProps
+  ): Promise<void> => {
     try {
       const messages: { role: string; content: string }[] = [];
       posts.forEach((post) => {

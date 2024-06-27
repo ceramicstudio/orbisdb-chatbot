@@ -43,10 +43,3 @@ export type Author = {
   username: string
   emoji: string
 }
-
-type Post = {
-  body: string
-  id: string
-  tag?: string
-  created?: string
-}

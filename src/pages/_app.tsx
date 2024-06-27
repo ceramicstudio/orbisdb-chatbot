@@ -14,7 +14,7 @@ createWeb3Modal({ wagmiConfig, projectId: PROJECT_ID, chains });
 
 export default function App({
   Component,
-  pageProps: { session, ...pageProps },
+  pageProps: { ...pageProps },
 }: AppProps) {
   return (
     <WagmiConfig config={wagmiConfig}>

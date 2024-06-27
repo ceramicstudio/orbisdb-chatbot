@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import useStore from "@/zustand/store";
-import { Profile } from "@/utils/types";
+import { type Profile } from "@/utils/types";
 import styles from "@/styles/profile.module.scss";
 import { useAccount } from "wagmi";
 import { env } from "@/env";
@@ -16,81 +16,96 @@ export const Userform = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [robotLoading, setRobotLoading] = useState<boolean>(false);
 
-  const getProfile = async () => {
-    setLoading(true);
-    const user = await orbis.getConnectedUser();
-    console.log(user);
-    const profile = orbis
-      .select("controller", "name", "username", "emoji", "actor")
-      .from(PROFILE_ID)
-      .where({ actor: ["human"] })
-      .context(CONTEXT_ID);
-    const profileResult = await profile.run();
-    if (profileResult.rows.length) {
-      console.log(profileResult.rows[0]);
-      setProfile(profileResult.rows[0] as Profile);
-    }
-    setLoading(false);
-  };
-
-  const getRobotProfile = async () => {
-    setLoading(true);
-    const profile = orbis
-      .select("controller", "name", "username", "emoji", "actor")
-      .from(PROFILE_ID)
-      .where({ actor: ["robot"] })
-      .context(CONTEXT_ID);
-    const profileResult = await profile.run();
-    console.log(profileResult);
-    if (profileResult.rows.length) {
-      setRobotProfile(profileResult.rows[0] as Profile);
+  const getProfile = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      const user = await orbis.getConnectedUser();
+      console.log(user);
+      const profile = orbis
+        .select("controller", "name", "username", "emoji", "actor")
+        .from(PROFILE_ID)
+        .where({ actor: ["human"] })
+        .context(CONTEXT_ID);
+      const profileResult = await profile.run();
+      if (profileResult.rows.length) {
+        console.log(profileResult.rows[0]);
+        setProfile(profileResult.rows[0] as Profile);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const updateProfile = async () => {
-    await orbis.getConnectedUser();
-    setLoading(true);
-    console.log(orbis);
-    const updatequery = await orbis
-      .insert(PROFILE_ID)
-      .value({
-        name: profile?.name,
-        username: profile?.username,
-        emoji: profile?.emoji,
-        actor: "human",
-      })
-      .context(CONTEXT_ID)
-      .run();
-
-    if (updatequery.content) {
-      alert("Updated profile.");
-      setProfile(updatequery.content);
+  const getRobotProfile = async (): Promise<void> => {
+    try {
+      setLoading(true);
+      const profile = orbis
+        .select("controller", "name", "username", "emoji", "actor")
+        .from(PROFILE_ID)
+        .where({ actor: ["robot"] })
+        .context(CONTEXT_ID);
+      const profileResult = await profile.run();
+      console.log(profileResult);
+      if (profileResult.rows.length) {
+        setRobotProfile(profileResult.rows[0] as Profile);
+      }
+    } catch (error) {
+      console.error(error);
     }
-
-    setLoading(false);
   };
 
-  const updateRobotProfile = async () => {
-    setRobotLoading(true);
-    await orbis.getConnectedUser();
-    const updatequery = await orbis
-      .insert(PROFILE_ID)
-      .value({
-        name: robotProfile?.name,
-        username: robotProfile?.username,
-        emoji: robotProfile?.emoji,
-        actor: "robot",
-      })
-      .context(CONTEXT_ID)
-      .run();
+  const updateProfile = async (): Promise<void> => {
+    try {
+      await orbis.getConnectedUser();
+      setLoading(true);
+      console.log(orbis);
+      const updatequery = await orbis
+        .insert(PROFILE_ID)
+        .value({
+          name: profile?.name,
+          username: profile?.username,
+          emoji: profile?.emoji,
+          actor: "human",
+        })
+        .context(CONTEXT_ID)
+        .run();
 
-    console.log(updatequery);
-    if (updatequery.content) {
-      alert("Updated robot profile.");
-      setRobotProfile(updatequery.content);
+      if (updatequery.content) {
+        alert("Updated profile.");
+        setProfile(updatequery.content);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
     }
+  };
 
-    setRobotLoading(false);
+  const updateRobotProfile = async (): Promise<void> => {
+    try {
+      setRobotLoading(true);
+      await orbis.getConnectedUser();
+      const updatequery = await orbis
+        .insert(PROFILE_ID)
+        .value({
+          name: robotProfile?.name,
+          username: robotProfile?.username,
+          emoji: robotProfile?.emoji,
+          actor: "robot",
+        })
+        .context(CONTEXT_ID)
+        .run();
+
+      console.log(updatequery);
+      if (updatequery.content) {
+        alert("Updated robot profile.");
+        setRobotProfile(updatequery.content);
+      }
+
+      setRobotLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {

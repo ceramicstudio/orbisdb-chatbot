@@ -2,7 +2,7 @@ import type { NextPage } from "next";
 import { useEffect } from "react";
 import { useAccount } from "wagmi";
 import useStore from "@/zustand/store";
-import { Userform } from "../components/userform.component";
+import { Userform } from "@/components/userform.component";
 
 const ProfilePage: NextPage = () => {
   const { address } = useAccount();
