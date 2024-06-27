@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useWalletClient } from "wagmi";
 import useStore from "@/zustand/store";
-import { type OrbisConnectResult, type SiwxAttestation } from "@useorbis/db-sdk";
+import {
+  type OrbisConnectResult,
+  type SiwxAttestation,
+} from "@useorbis/db-sdk";
 
 export function Navbar() {
   const [loggedIn, setLoggedIn] = useState<boolean | string>("loading");
@@ -11,16 +14,28 @@ export function Navbar() {
   const { setAuth, setOrbisSession } = useStore();
 
   useEffect(() => {
-    if (localStorage.getItem("orbis:session")) {
-      const attestation = (JSON.parse(localStorage.getItem("orbis:session") ?? "{}") as OrbisConnectResult).session.authAttestation as SiwxAttestation;
+    if (localStorage.getItem("orbis:session") && address) {
+      const attestation = (
+        JSON.parse(
+          localStorage.getItem("orbis:session") ?? "{}"
+        ) as OrbisConnectResult
+      ).session.authAttestation as SiwxAttestation;
       const expTime = attestation.siwx.message.expirationTime;
+      if (
+        attestation.siwx.message.address.toLowerCase() !== address.toLowerCase()
+      ) {
+        localStorage.removeItem("orbis:session");
+        setLoggedIn(false);
+      }
       //@ts-expect-error - TS doesn't know about the expirationTime field
-      if (expTime > Date.now()) {
+      else if (expTime > Date.now()) {
         localStorage.removeItem("orbis:session");
         setLoggedIn(false);
       } else {
         setOrbisSession(
-          JSON.parse(localStorage.getItem("orbis:session") ?? "{}") as OrbisConnectResult
+          JSON.parse(
+            localStorage.getItem("orbis:session") ?? "{}"
+          ) as OrbisConnectResult
         );
         setLoggedIn(true);
       }
