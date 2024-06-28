@@ -32,7 +32,7 @@ Next, navigate to the [model builder](https://studio.useorbis.com/models) view a
 
 Finally, click the "Contexts" tab in the studio navbar and copy your environment ID from the left-hand side of the screen. Assign the value to `NEXT_PUBLIC_ENV_ID` in your .env file.
 
-5. Run the application:
+6. Run the application:
 
 #### Development
 ```bash
